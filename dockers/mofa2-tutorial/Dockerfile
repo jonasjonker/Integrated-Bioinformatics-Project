@@ -38,12 +38,8 @@ RUN python3 -m venv ${VENV_DIR} && \
 RUN R --quiet -e "devtools::install_github('IRkernel/IRkernel')" && \
     R --quiet -e "IRkernel::installspec(prefix='${VENV_DIR}')"
 
-
-RUN R -e "devtools::install_github('bioFAM/MOFA2', build_opts = c('--no-resave-data --no-build-vignettes'))"
-
-RUN R -e "BiocManager::install(c('Signac', 'msigdbr', 'TFBSTools'))"
-
-RUN R -e "BiocManager::install(c('BSgenome.Hsapiens.UCSC.hg38', 'JASPAR2020'))"
+RUN R -e "devtools::install_github('bioFAM/MOFA2', build_opts = c('--no-resave-data --no-build-vignettes'))" && \
+    R -e "BiocManager::install(c('Signac', 'msigdbr', 'TFBSTools', 'motifmatchr', 'BSgenome.Hsapiens.UCSC.hg38', 'JASPAR2020'))"
 
 CMD jupyter notebook --ip 0.0.0.0
 
