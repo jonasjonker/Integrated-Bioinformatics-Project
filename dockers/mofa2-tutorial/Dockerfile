@@ -30,5 +30,10 @@ FROM layer-4 AS layer-5
 
 RUN     R -e "BiocManager::install(c('msigdbr', 'TFBSTools', 'JASPAR2020'))"
 
-CMD jupyter notebook --ip 0.0.0.0
+FROM layer-5 AS layer-6
 
+RUN     wget --quiet http://bioconductor.org/packages/release/data/annotation/src/contrib/BSgenome.Hsapiens.UCSC.hg38_1.4.3.tar.gz \
+    &&  R -e "install.packages('BSgenome.Hsapiens.UCSC.hg38_1.4.3.tar.gz', repos = NULL, type='source')" \
+    &&  rm BSgenome.Hsapiens.UCSC.hg38_1.4.3.tar.gz
+
+CMD jupyter notebook --ip 0.0.0.0
