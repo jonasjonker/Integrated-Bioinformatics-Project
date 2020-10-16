@@ -13,6 +13,10 @@ output_file <- args[2]
 
 untrained_mofa_obj <- readRDS(input_file)
 
+library(MOFA2)
+library(reticulate)
+
+py_config()
+
 run_mofa(untrained_mofa_obj, outfile=output_file)
 
-library(MOFA2)
