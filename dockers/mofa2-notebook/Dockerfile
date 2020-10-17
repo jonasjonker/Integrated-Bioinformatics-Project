@@ -43,7 +43,8 @@ USER    ${NB_USER}
 RUN     python3 -m venv ${VENV_DIR} \
     &&  pip3 install pip==20.2.3 \ 
     &&  pip3 install --no-cache-dir \
-        jupyter-rsession-proxy
+        jupyter-rsession-proxy \
+    &&  pip3 install mofapy2==0.5.6
 
 RUN     R -e "install.packages('Cairo')"
 
