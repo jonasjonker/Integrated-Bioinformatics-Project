@@ -52,12 +52,21 @@ BUG_REPORT_URL="https://bugs.alpinelinux.org/"
 
 you can also open a terminal within a container.
 ```bash
-singularity shell <image>
+~$ singularity shell alpine.sif
+singularity> ...
 ```
 
 Or execute the Images predefined commands (if any)
 ```bash
-singularity run <image>
+~$ singularity run alpine.sif
+# for this specific image, it just opens a terminal.
+singularity> ...
 ```
 
 ### Share a _singularity_ image
+You can share singularity images (or any file in the hpc) by changing the file
+ permissions
+```bash
+# gives everybody read and execute permission, but only you write permission.
+~$ chmod 755 images/alpine.sif
+```
