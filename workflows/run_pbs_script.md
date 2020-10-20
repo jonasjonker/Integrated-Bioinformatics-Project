@@ -70,3 +70,10 @@ You can share singularity images (or any file in the hpc) by changing the file
 # gives everybody read and execute permission, but only you write permission.
 ~$ chmod 755 images/alpine.sif
 ```
+
+To share your file you need a location
+
+```bash
+~$ ls ${VSC_DATA}/images/alpine.sif
+/user/leuven/332/vsc33222/images/alpine.sif
+```
