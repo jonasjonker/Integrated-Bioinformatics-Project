@@ -9,7 +9,7 @@ Options:
 
 Arguments:
     10xdir     directory containing: barcodes.tsv.gz features.tsv.gz matrix.mtx.gz
-    fragments  fragment file
+    fragments  fragment information file: fragments.tsv.gz. (Note that fragments.tsv.gz.tbi should be in the same directory)
     output     output file
 ' -> doc
 
@@ -20,8 +20,10 @@ if (!dir.exists(args$dir10x)) { stop(args$dir10x, " does not exists") }
 if (!file(args$fragments)) { stop(args$fragments, " does not exists") }
 
 message("Load libraries.")
+library(EnsDb.Hsapiens.v86)
 library(Signac)
 library(Seurat)
+
 
 message("Read 10x data.")
 raw_feature <- Seurat::Read10X(args$dir10x)
@@ -39,6 +41,12 @@ snare[['ATAC']] <- Signac::CreateChromatinAssay(
   genome = "hg38",
   fragments = fragments
 )
+
+message("Get annotations.")
+annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
+
+message("Add annotations to signac object. This takes some time.")
+Annotation(snare[["ATAC"]]) <- annotations
 
 message("Save to .rds file.")
 saveRDS(snare, args$output)
