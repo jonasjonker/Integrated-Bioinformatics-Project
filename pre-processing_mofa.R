@@ -22,3 +22,5 @@ for (i in 1:length(data$peak)){
   }
 }
 
+write.table(df, file='pre_processed_pbmc_unsorted_3k_atac_peak_annotation.tsv.tsv', quote=FALSE, sep='\t',row.names = FALSE)
+
