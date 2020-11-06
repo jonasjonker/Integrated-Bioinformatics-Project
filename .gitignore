@@ -2,3 +2,7 @@
 .*
 !.gitignore
 data/
+logs/
+ArchLogs/
+QualityControl/
+tmp/

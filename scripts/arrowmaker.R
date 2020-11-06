@@ -1,35 +1,59 @@
-# install and load ArchR
-devtools::install_github("GreenleafLab/ArchR", ref="release_1.0.0", repos = BiocManager::repositories()) # release branch
-# devtools::install_github("GreenleafLab/ArchR", ref="master", repos = BiocManager::repositories()) # master
+###############################################################################
+# Create arrowfiles from ... files.
+#
+# To install dependancies run:
+#     devtools::install_github("GreenleafLab/ArchR", ref="release_1.0.0", repos = BiocManager::repositories())
+#     ArchR::installExtraPackages()
+# 
+# Or use docker:
+#     jonasjonker/archr-notebook:latest
+#
+# Data used can be found at:
+#     https://support.10xgenomics.com/single-cell-multiome-atac-gex/datasets
+###############################################################################
+
+# dataset locations
+input_files  <- c("../data/pbmc_unsorted_3k_atac_fragments.tsv.gz", 
+                  "../data/pbmc_granulocyte_sorted_3k_atac_fragments.tsv.gz",
+                  "../data/pbmc_unsorted_10k_atac_fragments.tsv.gz",
+                  "../data/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz")
+
+# preconditions
+if (!dir.exists("../data")) {
+    stop("../data doesn't exist. Create directory or change working directory.")
+}
+if (!all(file.exists(input_files))) {
+    stop("At least one of the specified files doesn't exist.")
+}
+
+# load libraries
 library(ArchR)
 
-# install archr dependencies not installed by default
-ArchR::installExtraPackages()
-
-# set number of threads (usually set to half the number of available cores)
-addArchRThreads(threads = 1)
-
-# add genome
+# run parameters
+addArchRThreads(threads = 10)
 addArchRGenome("hg38")
 
-# assign paths to input fragment files
-unsorted_3k_fragment <- "/home/james/Documents/leuven/second-year/IBP/ArchR/data/3k_unsorted.tsv.gz"
-sorted_3k_fragment <- "/home/james/Documents/leuven/second-year/IBP/ArchR/data/3k_sorted.tsv.gz"
-unsorted_10k_fragment <- "/home/james/Documents/leuven/second-year/IBP/ArchR/data/10k_unsorted.tsv.gz"
-sorted_10k_fragment <- "/home/james/Documents/leuven/second-year/IBP/ArchR/data/10k_sorted.tsv.gz"
+# input vectors 
+sample_names <- c("3k_unsorted",
+                  "3k_sorted",
+                  "10k_unsorted",
+                  "10k_sorted")
+output_names <- c("../data/3k_unsorted",
+                  "../data/3k_sorted",
+                  "../data/10k_unsorted",
+                  "../data/10k_sorted")
 
-# assigning files to character vector for arrowfile creation
-input_files <- c(unsorted_3k_fragment, sorted_3k_fragment, unsorted_10k_fragment, sorted_10k_fragment)
-sample_names <- c("3k_unsorted", "3k_sorted", "10k_unsorted", "10k_sorted")
-output_names <- c("3k_unsorted", "3k_sorted", "10k_unsorted", "10k_sorted")
-
-# creating arrowfiles
+# create arrowfiles
 ArrowFiles <- createArrowFiles(
-  inputFiles = input_files,
-  sampleNames = sample_names,
-  outputNames = output_names,
-  filterTSS = 4, #Dont set this too high because you can always increase later
-  filterFrags = 1000, 
-  addTileMat = TRUE,
-  addGeneScoreMat = TRUE
+  inputFiles      = input_files,
+  sampleNames     = sample_names,
+  outputNames     = output_names,
+  filterTSS       = 4,            # Don't set this too high initially
+  filterFrags     = 1000, 
+  addTileMat      = TRUE,
+  addGeneScoreMat = TRUE,
+  subThreading    = FALSE         # ArchR doesn't lock hdf5 file properly 
+                                  # which causes problems when recombining
+                                  # tmp hdf5 blocks.
+                                  # https://github.com/GreenleafLab/ArchR/issues/248
 )

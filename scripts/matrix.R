@@ -2,7 +2,7 @@
 library(ArchR)
 
 # navigate to PBMC project with filtered doublets
-setwd("/home/james/Documents/leuven/second-year/IBP/ArchR/ProjPBMC/ArrowFiles")
+setwd("../data/ProjPBMC/ArrowFiles")
 
 # get GeneScoreMatrix summarised experiment for 3k unsorted
 gsm_se <- getMatrixFromArrow('3k_unsorted.arrow', 'GeneScoreMatrix')
