@@ -1,7 +1,7 @@
 'Create project
 
 Usage:
-  createproject.R <data_dir>
+  createArchRProject.R <data_dir>
 
 Options:
   -h --help     Show this screen.
@@ -17,11 +17,12 @@ if (!dir.exists(args$data_dir)) stop(args$data_dir, " doesn't exist.")
 library(ArchR)
 
 # run parameters
-addArchRThreads(threads = 10)
+addArchRThreads(threads = 12)
 addArchRGenome("hg38")
 
 # input vectors 
-ArrowFiles <- list.files(file.path(args$data_dir, "ArrowFiles"))
+all_files  <- list.files(args$data_dir)
+ArrowFiles <- file.path(args$data_dir, all_files[endsWith(all_files, ".arrow")])
 
 # make an ArchR project
 proj_pbmc <- ArchRProject(

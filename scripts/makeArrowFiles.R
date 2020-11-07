@@ -1,14 +1,14 @@
 'Make arrowfile(s) from fragment file(s).
 
 Usage:
-  arrowmaker.R <data_dir>
+  makeArrowFiles.R <data_dir>
 
 Options:
   -h --help     Show this screen.
   --version     Show version.
 ' -> doc
 library(docopt)
-args <- docopt(doc, version = 'arrowmaker 1.0')
+args <- docopt(doc, version = '1.0')
 
 # preconditions
 if (!dir.exists(args$data_dir)) stop(args$data_dir, " doesn't exist.")
@@ -18,7 +18,7 @@ library(ArchR)
 library(tools)
 
 # run parameters
-addArchRThreads(threads = 10)
+addArchRThreads(threads = 12)     # note that subThreading is disabled in createArrowFiles() 
 addArchRGenome("hg38")
  
 # file locations
@@ -26,7 +26,7 @@ all_files    <- list.files(args$data_dir)
 input_files  <- all_files[endsWith(all_files, ".tsv.gz")]
 input_paths  <- file.path(args$data_dir, input_files)
 sample_names <- file_path_sans_ext(input_files, compression = TRUE)
-output_paths <- file.path(args$data_dir, "ArrowFiles", sample_names)
+output_paths <- file.path(args$data_dir, sample_names)
 
 # create arrowfiles
 ArrowFiles <- createArrowFiles(
@@ -40,6 +40,6 @@ ArrowFiles <- createArrowFiles(
   addGeneScoreMat = TRUE,
   subThreading    = FALSE         # ArchR doesn't lock hdf5 file properly 
                                   # which causes problems when recombining
-                                  # tmp hdf5 blocks.
+                                  # tmp hdf5 blocks. knwon issue.
                                   # https://github.com/GreenleafLab/ArchR/issues/248
 )
