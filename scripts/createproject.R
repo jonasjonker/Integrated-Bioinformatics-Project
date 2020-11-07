@@ -1,31 +1,17 @@
-###############################################################################
-# Filter doublets from arrow files.
-#
-# Works under R 4.0.3
-#
-# filterDoublets() cpoied from https://github.com/GreenleafLab/ArchR/issues/217
-#
-# To install dependancies run:
-#     devtools::install_github("GreenleafLab/ArchR", ref="release_1.0.0", repos = BiocManager::repositories())
-#     ArchR::installExtraPackages()
-# 
-# Or use docker:
-#     jonasjonker/archr-notebook:latest
-###############################################################################
+'Create project
 
-# input vectors 
-arrowfiles <- c("../data/3k_unsorted.arrow", 
-                "../data/3k_sorted.arrow",
-                "../data/10k_unsorted.arrow", 
-                "../data/10k_sorted.arrow")
+Usage:
+  createproject.R <data_dir>
+
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
+' -> doc
+library(docopt)
+args <- docopt(doc, version = 'create_project 1.0')
 
 # preconditions
-if (!dir.exists("../data")) {
-    stop("../data doesn't exist. Create directory or change working directory.")
-}
-if (!all(file.exists(input_files))) {
-    stop("At least one of the specified files doesn't exist.")
-}
+if (!dir.exists(args$data_dir)) stop(args$data_dir, " doesn't exist.")
 
 # load libraries
 library(ArchR)
@@ -34,10 +20,13 @@ library(ArchR)
 addArchRThreads(threads = 10)
 addArchRGenome("hg38")
 
+# input vectors 
+ArrowFiles <- list.files(file.path(args$data_dir, "ArrowFiles"))
+
 # make an ArchR project
 proj_pbmc <- ArchRProject(
-  ArrowFiles      = arrowfiles, 
-  outputDirectory = "../data/ProjPBMC",
+  ArrowFiles      = ArrowFiles, 
+  outputDirectory = file.path(args$data_dir, "ArchRProject"),
   copyArrows      = TRUE        # Leave original files intact
 )
 
