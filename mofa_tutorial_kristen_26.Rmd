@@ -66,9 +66,9 @@ matrix.please<-function(x) {
 We have created a Seurat object with RNA and ATAC data modalities stored as different assays. [Here is the script](ftp://ftp.ebi.ac.uk/pub/databases/mofa/10x_rna_atac_vignette/create_seurat.R) to create the Seurat object from the CellRanger output
 ```{r}
 # run this to download the data set
-# seurat <- readRDS(url("ftp://ftp.ebi.ac.uk/pub/databases/mofa/10x_rna_atac_vignette/seurat.rds"))
+#seurat <- readRDS(url("ftp://ftp.ebi.ac.uk/pub/databases/mofa/10x_rna_atac_vignette/seurat.rds"))
 
-
+#seurat<- readRDS("C:\\Users\\user\\Desktop\\10xgenomics_data\\3ksorted\\seurat_3k_sorted.rds")
 seurat
 ```
 
@@ -128,8 +128,10 @@ names(pfm) <- foo[names(pfm)] %>% paste0(.,"-motif")
 
 Feature metadata contains genomic information for both RNA expression and ATAC peaks
 ```{r}
-feature_metadata <- fread("C:\\Users\\user\\Desktop\\pbmc_unsorted_3k_filtered_feature_bc_matrix\\filtered_feature_bc_matrix\\features.tsv.gz") %>%
+feature_metadata <- fread("C:\\Users\\user\\Desktop\\10xgenomics_data\\3ksorted\\pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix\\filtered_feature_bc_matrix\\features.tsv.gz") %>%
   setnames(c("ens_id","gene","view","chr","start","end"))
+# feature_metadata <- fread("ftp://ftp.ebi.ac.uk/pub/databases/mofa/10x_rna_atac_vignette/filtered_feature_bc_matrix/features.tsv.gz") %>%
+#   setnames(c("ens_id","gene","view","chr","start","end"))
 ```
 
 Fetch RNA metadata
@@ -146,9 +148,12 @@ head(feature_metadata.atac,n=3)
 ```
 Classify peaks into promoter-overlapping and distal
 ```{r}
-foo <- fread("C:\\Users\\user\\Desktop\\pre_processed_pbmc_unsorted_3k_atac_peak_annotation_temp.tsv") %>%
+foo <- fread("C:\\Users\\user\\Desktop\\10xgenomics_data\\3ksorted\\pre_processed_pbmc_granulocyte_sorted_3k_atac_peak_annotation.tsv") %>%
   .[,c("peak","peak_type")] %>%
   .[peak_type%in%c("distal", "promoter")]
+# foo <- fread("ftp://ftp.ebi.ac.uk/pub/databases/mofa/10x_rna_atac_vignette/atac_peak_annotation.tsv") %>%
+#   .[,c("peak","peak_type")] %>%
+#   .[peak_type%in%c("distal", "promoter")]
 
 feature_metadata.atac <- feature_metadata.atac %>% 
   merge(foo,by="peak",all.x=TRUE)
@@ -284,6 +289,7 @@ Load pretrained MOFA object
 # mofa <- readRDS(url("ftp://ftp.ebi.ac.uk/pub/databases/mofa/10x_rna_atac_vignette/mofa.rds"))
 
 #mofa <- readRDS("/Users/ricard/data/10x_rna_atac/PBMC/mofa/mofa.rds")
+saveRDS(mofa,"C:\\Users\\user\\Desktop\\10xgenomics_data\\3ksorted\\mofa_3k_sorted.rds", compress = FALSE)
 
 mofa
 ```
@@ -371,6 +377,48 @@ plot_weights(mofa,
   text_size = 4
 )
 ```
+```{r}
+plot_top_weights(mofa,
+                 view="RNA",
+                 factor=1,
+                 nfeatures=20,
+                 scale=T)
+plot_top_weights(mofa,
+                 view="RNA",
+                 factor=2,
+                 nfeatures=20,
+                 scale=T)
+plot_top_weights(mofa,
+                 view="RNA",
+                 factor=3,
+                 nfeatures=20,
+                 scale=T)
+plot_top_weights(mofa,
+                 view="RNA",
+                 factor=4,
+                 nfeatures=20,
+                 scale=T)
+plot_top_weights(mofa,
+                 view="RNA",
+                 factor=5,
+                 nfeatures=20,
+                 scale=T)
+```
+```{r}
+plot_factor(mofa,
+            factors = 1,
+            color_by="PLXDC2",
+            add_violin=TRUE,
+            dodge=TRUE)
+
+plot_factor(mofa,
+            factors = 5,
+            color_by="EEF1A1",
+            add_violin=TRUE,
+            dodge=TRUE)
+
+
+```
 
 #### Visualisation covariation patterns in the input data
 
@@ -428,7 +476,7 @@ plot_data_heatmap(mofa,
 Let's proceed now in a similar way to characterise Factor 2. It is clearly capturing B cell commitment
 
 ```{r}
-plot_factor(mofa, factors=2, group_by = "celltype") +
+plot_factor(mofa, factors=3, group_by = "celltype") +
   theme(
     axis.text.x = element_text(color="black", angle=40, vjust=1, hjust=1)
   )
@@ -438,7 +486,7 @@ Let's plot the associated RNA weights. We see good B cell markers, including CD7
 ```{r}
 plot_weights(mofa, 
   view = "RNA", 
-  factors = 2, 
+  factors = 3, 
   nfeatures = 10, 
   text_size = 4
 )
@@ -446,7 +494,7 @@ plot_weights(mofa,
 
 Let's color the factor values by BANK1 expression
 ```{r}
-plot_factor(mofa, factors=2, group_by = "celltype", color_by="BANK1") +
+plot_factor(mofa, factors=3, group_by = "celltype", color_by="BANK1") +
   theme(
     axis.text.x = element_text(color="black", angle=40, vjust=1, hjust=1)
   )
@@ -456,7 +504,7 @@ Again, we can visualise the ATAC signatures:
 ```{r }
 plot_data_heatmap(mofa, 
   view = "ATAC_promoter", 
-  factor = 2, 
+  factor = 3, 
   features = 50,
   show_rownames = F, show_colnames = F, 
   cluster_rows = T, cluster_cols = F,
@@ -470,7 +518,7 @@ plot_data_heatmap(mofa,
 In the correlation analysis we found that Factor 4 is strongly correlated to the total number of ATAC peaks, so it is likely a technical source of variation that has not been removed in the normalisation steps. The signal is clear, and it affects all cell types in a similar fashion:
 
 ```{r}
-plot_factor(mofa, factors=4, group_by = "celltype", color_by="nFeature_ATAC") +
+plot_factor(mofa, factors=2, group_by = "celltype", color_by="nFeature_ATAC") +
   theme(
     axis.text.x = element_text(color="black", angle=40, vjust=1, hjust=1)
   )
@@ -480,10 +528,26 @@ If we plot the associated ATAC weights notice that the distribution is massively
 ```{r}
 plot_weights(mofa, 
   view = "ATAC_promoter", 
-  factors = 4, 
-  nfeatures = 0, 
-  text_size = 4
+  factors = 2, 
+  nfeatures = 6, 
+  text_size = 4 )
+```
+
+Can we inspect 2 factors together? We look now at Factors 1 and 2 this plot doesnt tell us much
+```{r}
+p <- plot_factors(mofa, 
+  factors = c(1,1), 
+  color_by = "PLXDC2",
+  shape_by = "broad_celltype",
+  dot_size = 2.5,
+  show_missing = T
 )
+
+p <- p + 
+  geom_hline(yintercept=-1, linetype="dashed") +
+  geom_vline(xintercept=(-0.5), linetype="dashed")
+
+print(p)
 ```
 
 ## Non-linear dimensionality reduction
@@ -509,12 +573,12 @@ plot_dimred(mofa,
   stroke=0.05, 
   dot_size = 1, 
   legend = FALSE
-) + scale_fill_manual(values=colors)
+)
 ```
 
 We can try to add some interpretatibility on the UMAP by visualising the contribution of each Factor on the different groups of cells.
 ```{r}
-for (i in paste0("Factor",1:3)) {
+for (i in paste0("Factor",1:5)) {
   p <- plot_dimred(mofa, 
     method = "UMAP", 
     color_by = i, 
@@ -607,20 +671,38 @@ names(gsea.positive)
 
 Factor 1 captured lineage of origin, where lymphoid cells wer linked to (-) factor values and myeloid cells to (+) factor values. Consistently, when plotting the pathways enriched in Factor 1 for (+) weight values we can see Myeloid-associated pathways:
 ```{r}
-plot_enrichment(gsea.positive, factor = 1, max.pathways = 15)
+plot_enrichment(gsea.positive, factor = 2, max.pathways = 15)
 ```
 
 and when plotting the pathways enriched in Factor 1 for (-) weight values we can see Lymphoid-associated pathways:
 ```{r}
-plot_enrichment(gsea.negative, factor = 1, max.pathways = 15)
+plot_enrichment(gsea.negative, factor = 2, max.pathways = 15)
 ```
 
 It is always advised to not rely only on the p-values and to visualise which genes are driving the enrichment within each pathways. This can be done with the `plot_enrichment_detailed` function.
 ```{r}
 plot_enrichment_detailed(gsea.positive,
-  factor = 1,
+  factor = 2,
   max.genes = 10,
   max.pathways = 5
+)
+```
+It seems that most of the Factors do not have clear gene set signatures. A clear exception is Factor 5, which has a very strong enrichment for genes with negative weights and Factor 1 and 2.
+```{r}
+
+plot_enrichment_heatmap(gsea.negative)
+plot_enrichment_heatmap(gsea.positive)
+
+```
+
+```{r}
+plot_enrichment(gsea.negative, factor = 5, max.pathways = 15)
+```
+```{r}
+plot_enrichment_detailed(
+  enrichment.results = gsea.negative,
+  factor = 5, 
+  max.pathways = 3
 )
 ```
 
