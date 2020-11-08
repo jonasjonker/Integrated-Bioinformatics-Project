@@ -1,4 +1,10 @@
 *.log
 .*
 !.gitignore
-data/
+data/*
+data2
+!data/CellType_annotation*.csv
+logs/
+ArchLogs/
+QualityControl/
+tmp/

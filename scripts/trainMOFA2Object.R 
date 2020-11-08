@@ -1,0 +1,20 @@
+'train MOFA object
+
+Usage:
+  trainMOFA2Object.R <ourfile>
+
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
+' -> doc
+library(docopt)
+args <- docopt(doc, version = '1.0')
+
+# preconditions
+if (!file.exists(args$seurat_obj))      stop(args$meta_data, " doesn't exist.")
+
+# load libraries
+library(reticulate)
+library(MOFA2)
+
+mofa <- readRDS(paste0(args$outfile, "_mofa.rds"))
