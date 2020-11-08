@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 usage () {
-    echo "Usage: `basename $0` <10XDIR> <METADATA> <PEAKDATA> <FACTORS> <OUTFILE>"
+    echo "Usage: `basename $0` <10XDIR> <CELLANNOTATION> <PEAKDATA> <FACTORS> <OUTFILE>"
     echo "Pre-process and train MOFA2 object."
     echo
     echo "Options:"
@@ -18,13 +18,12 @@ usage () {
 [[ $4 =~ ^[0-9]+$ ]] || echo "\"$4\" is not an integer." && exit 1
 
 XXDIR="$1"
-METADATA="$2"
+CELLANNOTATION="$2"
 PEAKDATA="$3"
 FACTORS="$4"
 OUTFILE="$5"
 
-Rscript createSeuratObject.R    $XXDIR $METADATA $OUTFILE && \
-Rscript processSeuratObject.R   $XXDIR $PEAKDATA $OUTFILE && \
-Rscript createMOFA2Object.R     $XXDIR $METADATA $OUTFILE && exit 0
+Rscript createSeuratObject.R    $XXDIR $CELLANNOTATION $PEAKDATA $OUTFILE && \
+Rscript createMOFA2Object.R     $FACTORS $OUTFILE && exit 0
 
 exit 1
