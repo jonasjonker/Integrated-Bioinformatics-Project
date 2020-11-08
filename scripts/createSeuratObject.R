@@ -1,7 +1,7 @@
 'Create Seurat Object
 
 Usage:
-  createSeuratObject.R <feature_matrix> <meta_data> <peak_data> <outfile> 
+  createSeuratObject.R <feature_matrix> <cell_annotation> <peak_data> <outfile> 
 
 Options:
   -h --help     Show this screen.
@@ -11,9 +11,9 @@ library(docopt)
 args <- docopt(doc, version = '1.0')
 
 # preconditions
-if (!dir.exists(args$feature_matrix))  stop(args$feature_matrix, " doesn't exist.")
-if (!file.exists(args$meta_data))      stop(args$meta_data, " doesn't exist.")
-if (!file.exists(args$peak_data))      stop(args$peak_data, " doesn't exist.")
+if (!dir.exists(args$feature_matrix))   stop(args$feature_matrix, " doesn't exist.")
+if (!file.exists(args$cell_annotation)) stop(args$cell_annotation, " doesn't exist.")
+if (!file.exists(args$peak_data))       stop(args$peak_data, " doesn't exist.")
 
 # load libraries
 library(Seurat)
@@ -46,24 +46,27 @@ seurat[["ATAC"]] <- CreateAssayObject(counts = counts["Peaks"][[1]])
 ###############################################################################
 message("3) add broad celltypes [skipped]")####################################
 ###############################################################################
-# metadata <- data.table::fread(args$meta_data) %>% .[,barcode:=gsub("-1","",barcode)]
-# rename_celltypes <- c(
-#     "B cell progenitor"      = "Lymphoid",
-#     "CD4 Memory"             = "Lymphoid",
-#     "CD8 Naive"              = "Lymphoid",
-#     "NK cell"                = "Lymphoid",
-#     "CD4 Naive"              = "Lymphoid",
-#     "Dendritic cell"         = "Lymphoid",
-#     "pDC"                    = "Lymphoid",
-#     "CD8 effector"           = "Lymphoid",
-#     "Double negative T cell" = "Lymphoid",
-#     "pre-B cell"             = "Lymphoid",
-#     "CD14 Monocytes"         = "Myeloid",
-#     "CD16 Monocytes"         = "Myeloid"
-# )
-# metadata$broad_celltype <- stringr::str_replace_all(metadata$broad_celltype,
-#                                                     rename_celltypes)
-# str(metadata)
+metadata <- data.table::fread("../data/CellType_annotation_pbmc_unsorted_3k.csv") 
+# %>%             .[,V1:=gsub("-1","",V1)]  # $V1: barcodes
+metadata$barcode <- metadata$V1
+metadata$V1 <- NULL
+
+rename_celltypes <- c(
+    "B cell progenitor"      = "Lymphoid",
+    "CD4 Memory"             = "Lymphoid",
+    "CD8 Naive"              = "Lymphoid",
+    "NK cell"                = "Lymphoid",
+    "CD4 Naive"              = "Lymphoid",
+    "Dendritic cell"         = "Lymphoid",
+    "pDC"                    = "Lymphoid",
+    "CD8 effector"           = "Lymphoid",
+    "Double negative T cell" = "Lymphoid",
+    "pre-B cell"             = "Lymphoid",
+    "CD14 Monocytes"         = "Myeloid",
+    "CD16 Monocytes"         = "Myeloid"
+)
+metadata$broad_celltype <- stringr::str_replace_all(metadata$predicted.id,
+                                                    rename_celltypes)
 
 ###############################################################################
 message("4) Quality Control [skipped]")########################################
@@ -71,22 +74,22 @@ message("4) Quality Control [skipped]")########################################
 # DT[, col := val]   # update (or add) a column called "col" with value "val".
 # DT[i, col := val]  # same as above, but only for those rows specified in i.
 ###############################################################################
-# dt <- data.table(barcode = colnames(seurat)) %>%
-#       merge(metadata,
-#             by = "barcode",
-#             all.x = TRUE) %>%
-#       .[,c("pass_rnaQC", "pass_accQC"):=FALSE] %>%
-#       .[!is.na(broad_celltype), c("pass_rnaQC", "pass_accQC"):=TRUE] %>%
-#       tibble::column_to_rownames("barcode")
-# seurat <- AddMetaData(seurat, dt)
-# seurat <- seurat %>% . [,seurat@meta.data$pass_accQC==TRUE & 
-#                          seurat@meta.data$pass_rnaQC==TRUE]
+dt <- data.table(barcode = colnames(seurat$RNA)) %>%
+      merge(metadata,
+            by = "barcode",
+            all.x = TRUE) %>%
+      .[,c("pass_rnaQC", "pass_accQC"):=FALSE] %>%
+      .[!is.na(broad_celltype), c("pass_rnaQC", "pass_accQC"):=TRUE] %>%
+      tibble::column_to_rownames("barcode")
+seurat <- AddMetaData(seurat, dt)
+seurat <- seurat %>% . [,seurat@meta.data$pass_accQC==TRUE & 
+                         seurat@meta.data$pass_rnaQC==TRUE]
 
 
 ###############################################################################
 message("5) add feature and peak metadata")####################################
 ###############################################################################
-feature_metadata      <- fread(file.path(args$feature_matrix, 
+feature_metadata      <- fread(file.path("../data/filtered_feature_bc_matrix", 
                                          "features.tsv.gz")) %>% 
                          setnames(c("ens_id",
                                     "gene",
@@ -98,13 +101,16 @@ feature_metadata.rna  <- feature_metadata[view=="Gene Expression"]
 feature_metadata.atac <- feature_metadata[view=="Peaks"] %>% 
                          .[,ens_id:=NULL] %>%
                          setnames("gene","peak")
-feature_peakdata.atac <- fread(args$peak_data) %>% 
+feature_peakdata.atac <- fread("../data/pbmc_unsorted_3k_atac_peak_annotation.tsv") %>% 
                          .[,c("peak","peak_type")] %>% 
                          .[peak_type %in% c("distal", "promoter")]
+feature_peakdata.atac <- feature_peakdata.atac[,peak:=sub("_",":",peak)]
+feature_peakdata.atac <- feature_peakdata.atac[,peak:=sub("_","-",peak)]
 feature_metadata.atac <- feature_metadata.atac %>%
                          merge(feature_peakdata.atac,
                                by = "peak",
                                all.x = TRUE)
+
 
 ###############################################################################
 message("6) add chromatin assay")##############################################

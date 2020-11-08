@@ -2,6 +2,7 @@
 .*
 !.gitignore
 dat*/
+!data/CellType_annotation*.csv
 logs/
 ArchLogs/
 QualityControl/
