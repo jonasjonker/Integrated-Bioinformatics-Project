@@ -35,6 +35,7 @@ message("1) read data")########################################################
 ###############################################################################
 counts <- Seurat::Read10X(args$feature_matrix)
 
+
 ###############################################################################
 message("2) create seurat object (with RNAseq and ATAC assay)")################
 ###############################################################################
@@ -43,11 +44,11 @@ seurat <- CreateSeuratObject(counts    = counts["Gene Expression"][[1]],
                              min.cells = 1)
 seurat[["ATAC"]] <- CreateAssayObject(counts = counts["Peaks"][[1]])
 
+
 ###############################################################################
 message("3) add broad celltypes [skipped]")####################################
 ###############################################################################
-metadata <- data.table::fread("../data/CellType_annotation_pbmc_unsorted_3k.csv") 
-# %>%             .[,V1:=gsub("-1","",V1)]  # $V1: barcodes
+metadata <- data.table::fread(args$cell_annotation) 
 metadata$barcode <- metadata$V1
 metadata$V1 <- NULL
 
@@ -89,7 +90,7 @@ seurat <- seurat %>% . [,seurat@meta.data$pass_accQC==TRUE &
 ###############################################################################
 message("5) add feature and peak metadata")####################################
 ###############################################################################
-feature_metadata      <- fread(file.path("../data/filtered_feature_bc_matrix", 
+feature_metadata      <- fread(file.path(args$feature_matrix, 
                                          "features.tsv.gz")) %>% 
                          setnames(c("ens_id",
                                     "gene",
@@ -97,11 +98,11 @@ feature_metadata      <- fread(file.path("../data/filtered_feature_bc_matrix",
                                     "chr",
                                     "start",
                                     "end"))
-feature_metadata.rna  <- feature_metadata[view=="Gene Expression"]
-feature_metadata.atac <- feature_metadata[view=="Peaks"] %>% 
+feature_metadata.rna  <- feature_metadata[view == "Gene Expression"]
+feature_metadata.atac <- feature_metadata[view == "Peaks"] %>% 
                          .[,ens_id:=NULL] %>%
                          setnames("gene","peak")
-feature_peakdata.atac <- fread("../data/pbmc_unsorted_3k_atac_peak_annotation.tsv") %>% 
+feature_peakdata.atac <- fread(args$peak_data) %>%
                          .[,c("peak","peak_type")] %>% 
                          .[peak_type %in% c("distal", "promoter")]
 feature_peakdata.atac <- feature_peakdata.atac[,peak:=sub("_",":",peak)]
@@ -110,7 +111,6 @@ feature_metadata.atac <- feature_metadata.atac %>%
                          merge(feature_peakdata.atac,
                                by = "peak",
                                all.x = TRUE)
-
 
 ###############################################################################
 message("6) add chromatin assay")##############################################

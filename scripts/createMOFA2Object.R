@@ -17,15 +17,14 @@ library(MOFA2)
 mofa <- create_mofa(seurat, assays = c("RNA",
                                        "ATAC_distal",
                                        "ATAC_promoter")) # this will throw an error its okay
- 
+message(args$factors) 
+
 data_opt <- get_default_data_options(mofa)
 
 model_opts <- get_default_model_options(mofa)
 
-model_opts$num_factors=args$factors
+model_opts$num_factors=as.integer(args$factors)
 
 mofa <- prepare_mofa(mofa, model_options = model_opts)
 
-trainedmofa <- run_mofa(mofa)
-
-saveRDS(trainedmofa, paste0(args$outfile, "_trained_mofa.rds"))
+trainedmofa <- run_mofa(mofa, outfile = paste0(args$outfile, "_trained_mofa.rds"))
