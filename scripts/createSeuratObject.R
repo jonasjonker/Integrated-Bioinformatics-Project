@@ -63,14 +63,16 @@ rename_celltypes <- c(
     "CD8 effector"           = "Lymphoid",
     "Double negative T cell" = "Lymphoid",
     "pre-B cell"             = "Lymphoid",
-    "CD14 Monocytes"         = "Myeloid",
-    "CD16 Monocytes"         = "Myeloid"
+    "CD14+ Monocytes"         = "Myeloid",
+    "CD16+ Monocytes"         = "Myeloid"
 )
-metadata$broad_celltype <- stringr::str_replace_all(metadata$predicted.id,
+metadata$celltype       <- metadata$predicted.id
+metadata$predicted.id   <- NULL
+metadata$broad_celltype <- stringr::str_replace_all(metadata$celltype,
                                                     rename_celltypes)
 
 ###############################################################################
-message("4) Quality Control [skipped]")########################################
+message("4) Quality Control")##################################################
 ###############################################################################
 # DT[, col := val]   # update (or add) a column called "col" with value "val".
 # DT[i, col := val]  # same as above, but only for those rows specified in i.
@@ -83,8 +85,8 @@ dt <- data.table(barcode = colnames(seurat$RNA)) %>%
       .[!is.na(broad_celltype), c("pass_rnaQC", "pass_accQC"):=TRUE] %>%
       tibble::column_to_rownames("barcode")
 seurat <- AddMetaData(seurat, dt)
-seurat <- seurat %>% . [,seurat@meta.data$pass_accQC==TRUE & 
-                         seurat@meta.data$pass_rnaQC==TRUE]
+# seurat <- seurat %>% . [,seurat@meta.data$pass_accQC==TRUE & 
+#                          seurat@meta.data$pass_rnaQC==TRUE]
 
 
 ###############################################################################

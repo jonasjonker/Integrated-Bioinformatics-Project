@@ -17,10 +17,8 @@ library(MOFA2)
 mofa <- create_mofa(seurat, assays = c("RNA",
                                        "ATAC_distal",
                                        "ATAC_promoter")) # this will throw an error its okay
-message(args$factors) 
 
-data_opt <- get_default_data_options(mofa)
-
+data_opt   <- get_default_data_options(mofa)
 model_opts <- get_default_model_options(mofa)
 
 model_opts$num_factors=as.integer(args$factors)
