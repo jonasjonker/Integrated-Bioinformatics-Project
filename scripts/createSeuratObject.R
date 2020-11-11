@@ -64,7 +64,7 @@ rename_celltypes <- c(
     "Double negative T cell" = "Lymphoid",
     "pre-B cell"             = "Lymphoid",
     "CD14+ Monocytes"         = "Myeloid",
-    "CD16+ Monocytes"         = "Myeloid"
+    "CD14+ Monocytes"         = "Myeloid"
 )
 metadata$celltype       <- metadata$predicted.id
 metadata$predicted.id   <- NULL
