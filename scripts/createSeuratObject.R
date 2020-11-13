@@ -15,20 +15,26 @@ if (!dir.exists(args$feature_matrix))   stop(args$feature_matrix, " doesn't exis
 if (!file.exists(args$cell_annotation)) stop(args$cell_annotation, " doesn't exist.")
 if (!file.exists(args$peak_data))       stop(args$peak_data, " doesn't exist.")
 
-# load libraries
-library(Seurat)
-library(data.table)
-library(purrr)
-library(reticulate)
-library(data.table)
-library(ggplot2)
-library(Seurat)
-library(Signac)
-library(msigdbr)
-library(JASPAR2020)
-library(TFBSTools)
-library(BSgenome.Hsapiens.UCSC.hg38)
-library(MOFA2)
+###############################################################################
+message("0) load libraries")###################################################
+###############################################################################
+suppressMessages({
+    library(dplyr)
+    library(stringr)
+    library(Seurat)
+    library(data.table)
+    library(purrr)
+    library(reticulate)
+    library(data.table)
+    library(ggplot2)
+    library(Seurat)
+    library(Signac)
+    library(msigdbr)
+    library(JASPAR2020)
+    library(TFBSTools)
+    library(BSgenome.Hsapiens.UCSC.hg38)
+    library(MOFA2)
+})
 
 ###############################################################################
 message("1) read data")########################################################
@@ -46,7 +52,7 @@ seurat[["ATAC"]] <- CreateAssayObject(counts = counts["Peaks"][[1]])
 
 
 ###############################################################################
-message("3) add broad celltypes [skipped]")####################################
+message("3) add broad celltypes")##############################################
 ###############################################################################
 metadata <- data.table::fread(args$cell_annotation) 
 metadata$barcode <- metadata$V1
@@ -63,13 +69,17 @@ rename_celltypes <- c(
     "CD8 effector"           = "Lymphoid",
     "Double negative T cell" = "Lymphoid",
     "pre-B cell"             = "Lymphoid",
-    "CD14+ Monocytes"         = "Myeloid",
-    "CD14+ Monocytes"         = "Myeloid"
+    "CD14[+] Monocytes"      = "Myeloid",
+    "CD16[+] Monocytes"      = "Myeloid"
 )
 metadata$celltype       <- metadata$predicted.id
 metadata$predicted.id   <- NULL
 metadata$broad_celltype <- stringr::str_replace_all(metadata$celltype,
                                                     rename_celltypes)
+
+table(metadata$celltype)
+table(metadata$broad_celltype)
+
 
 ###############################################################################
 message("4) Quality Control")##################################################
@@ -85,12 +95,22 @@ dt <- data.table(barcode = colnames(seurat$RNA)) %>%
       .[!is.na(broad_celltype), c("pass_rnaQC", "pass_accQC"):=TRUE] %>%
       tibble::column_to_rownames("barcode")
 seurat <- AddMetaData(seurat, dt)
-# seurat <- seurat %>% . [,seurat@meta.data$pass_accQC==TRUE & 
-#                          seurat@meta.data$pass_rnaQC==TRUE]
+seurat <- seurat %>% . [,seurat@meta.data$pass_accQC==TRUE & 
+                         seurat@meta.data$pass_rnaQC==TRUE]
 
 
 ###############################################################################
 message("5) add feature and peak metadata")####################################
+###############################################################################
+## Some peaks are in the distal/promotor region of multiple genes.           ##
+## For example:                                                              ##
+##     KI270728.1_1791444_1791767			intergenic                       ##
+## vs                                                                        ##
+##     KI270727.1_52377_52706	AC136352.3	48435	distal                   ##
+## vs                                                                        ##
+##     GL000194.1_114837_115052	MAFIP;AC145212.1	0;0	distal;promoter      ##
+##                                                                           ##
+## Here peak_type's in both promoter and distal regions are labeled promoter.##
 ###############################################################################
 feature_metadata      <- fread(file.path(args$feature_matrix, 
                                          "features.tsv.gz")) %>% 
@@ -106,6 +126,8 @@ feature_metadata.atac <- feature_metadata[view == "Peaks"] %>%
                          setnames("gene","peak")
 feature_peakdata.atac <- fread(args$peak_data) %>%
                          .[,c("peak","peak_type")] %>% 
+                          mutate(peak_type = ifelse(str_detect(peak_type, "promoter"), "promoter", peak_type))%>%
+                          mutate(peak_type = ifelse(str_detect(peak_type, "distal"), "distal", peak_type)) %>%
                          .[peak_type %in% c("distal", "promoter")]
 feature_peakdata.atac <- feature_peakdata.atac[,peak:=sub("_",":",peak)]
 feature_peakdata.atac <- feature_peakdata.atac[,peak:=sub("_","-",peak)]
@@ -113,6 +135,7 @@ feature_metadata.atac <- feature_metadata.atac %>%
                          merge(feature_peakdata.atac,
                                by = "peak",
                                all.x = TRUE)
+table(feature_metadata.atac$peak_type)
 
 ###############################################################################
 message("6) add chromatin assay")##############################################
