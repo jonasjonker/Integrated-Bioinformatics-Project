@@ -83,7 +83,7 @@ for(i in 1:ncol(gsm_df_flipped)) {
   exp_i = sum(gsm_df_flipped[,i])/nrow(gsm_df_flipped)
   obv_i = sum(gex_df_flipped[,i])/nrow(gex_df_flipped)
   abs_diff_i = sum(c(abs(exp_i - obv_i)))
-  rel_diff_i = abs_diff_i/obs_i
+  rel_diff_i = abs_diff_i/obv_i
   
   exp_obv_diff[i, 1] = exp_i
   exp_obv_diff[i, 2] = obv_i
@@ -98,12 +98,12 @@ plot_diffs <- function(dataframe = exp_obv_diff, n = 20) {
   ggplot(exp_obv_diff[1:n,]) +
     geom_point(aes(x=row.names(exp_obv_diff[1:n,]), y = exp), colour='red', alpha=0.7) +
     geom_point(aes(x=row.names(exp_obv_diff[1:n,]), y = obv), colour='blue', alpha=0.7) +
-    geom_point(aes(x=row.names(exp_obv_diff[1:n,]), y = rel_diff), colour='green', alpha=0.7) +
+    geom_point(aes(x=row.names(exp_obv_diff[1:n,]), y = abs_diff), colour='green', alpha=0.7) +
     theme(axis.text.x=element_blank(),
           axis.ticks.x=element_blank())
 }
 
-plot_diffs()
+plot_diffs(n=10)
 
 # plot density estimate
 ggplot(exp_obv_diff, aes(diffs)) + geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) + xlim(0,5)
