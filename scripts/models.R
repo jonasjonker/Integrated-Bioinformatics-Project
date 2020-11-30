@@ -11,6 +11,7 @@ PATH_TO_DATA <- readline(prompt="Enter path to data: ")
 GSM_FILE <- readline(prompt="Enter file name of GSM file: ")
 GEX_FILE <- readline(prompt="Enter file name of GEX file: ")
 
+setwd(PATH_TO_DATA)
 gsm_df = read.table(GSM_FILE,sep=" ")
 gex_df = read.table(GEX_FILE,sep=" ")
 
@@ -83,24 +84,21 @@ getOntologies <- function(go_data, numGO){
   return(ontologies)
 }
 
-# get genes with a given gene ontology
-getGenesWithGO <- function(geneOntology, ontology_df) {
-  genes = subset(ontology_df, GO1==geneOntology | GO2==geneOntology | GO3==geneOntology)$Gene
-  return(genes)
+getGenesWithGO <- function(geneOntology, ontologies) {
+  genes = ontologies[apply(ontologies, 1, function(x) any(grepl(geneOntology, x))), ][1]
+  filtered_gsm = data.frame(GSM = c(t(gsm_df[genes$Gene,])), stringsAsFactors=FALSE)
+  filtered_gex = data.frame(GEX = c(t(gex_df[genes$Gene,])), stringsAsFactors=FALSE)
+  ontologyData = as.data.frame(cbind(filtered_gsm, filtered_gex))
+  return(ontologyData)
 }
 
-# merge all gene data for a given ontology
+# get gene data for a given ontology
 getOntologyData <- function(geneOntology, numGOs) {
   genelist <- row.names(gsm_df)
   go_data <- queryMany(genelist, scopes='symbol', fields=c('go'), species='human')
-  ontologies = getOntologies(go_data, numGOs)
-  filtered_genes = getGenesWithGO(geneOntology, ontologies)
-  
-  filtered_genes_df = data.frame(Gene=genes)
-  filtered_gsm = data.frame(GSM = c(t(gsm_df[filtered_genes_df$Gene,])), stringsAsFactors=FALSE)
-  filtered_gex = data.frame(GEX = c(t(gex_df[filtered_genes_df$Gene,])), stringsAsFactors=FALSE)
-  ontologyData = as.data.frame(cbind(filtered_gsm, filtered_gex))
-  return(ontologyData)
+  ontologies <- getOntologies(go_data, numGOs)
+  results <-getGenesWithGO(geneOntology, ontologies)
+  return(results)
 }
 
 # plot a scatter plot for gene score vs expression for a given gene ontology and fit a local regression on the data
@@ -115,11 +113,6 @@ plotGeneOntology <- function(geneOntology, results, numcells=5000) {
          title=geneOntology) 
   plot(gg)
 }
-
-# getting gene ontology data
-genelist <- row.names(gsm_df)
-go_data <- queryMany(genelist, scopes='symbol', fields=c('go'), species='human')
-ontologies = getOntologies(go_data, 3)
 
 # getting length data
 gene_lengths = getGeneLengths(genelist)
