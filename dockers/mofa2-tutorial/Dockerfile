@@ -23,4 +23,6 @@ RUN     wget --quiet http://bioconductor.org/packages/release/data/annotation/sr
     &&  R -e "install.packages('BSgenome.Hsapiens.UCSC.hg38_1.4.3.tar.gz', repos = NULL, type='source')" \
     &&  rm BSgenome.Hsapiens.UCSC.hg38_1.4.3.tar.gz
 
+RUN     R -e "install.packages(c('psych', 'ggpubr'))"
+
 CMD jupyter notebook --ip 0.0.0.0
