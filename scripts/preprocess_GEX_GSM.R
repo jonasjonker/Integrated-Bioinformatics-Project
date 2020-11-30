@@ -67,6 +67,9 @@ gex_df <-  gex_df[order(row.names(gex_df)), ]
 gsm_df <-  gsm_df[, order(names(gsm_df))]
 gsm_df <-  gsm_df[order(row.names(gsm_df)), ]
 
+write.table(gsm_df, "3k_sorted_gsm_df.txt")
+write.table(gex_df, "3k_sorted_gex_df.txt")
+
 # some basic exploratory plots
 gsm_df_flipped = t(gsm_df)
 gex_df_flipped = t(gex_df)
@@ -106,4 +109,4 @@ plot_diffs <- function(dataframe = exp_obv_diff, n = 20) {
 plot_diffs(n=10)
 
 # plot density estimate
-ggplot(exp_obv_diff, aes(diffs)) + geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) + xlim(0,5)
+# ggplot(exp_obv_diff, aes(diffs)) + geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) + xlim(0,5)
