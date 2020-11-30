@@ -121,6 +121,32 @@ gene_lengths = getGeneLengths(genelist)
 # +++++++++++++++++ Single Gene Models +++++++++++++++++++
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+# fit a linear regression to data from a single gene
+singleGeneRegression <- function(geneName) {
+  data = getGeneData(geneName)
+  split_data = splitData(data, prop=0.8)
+  train = split_data[[1]]
+  test = split_data[[2]]
+  
+  model <- lm(GEX~GSM, data=train)
+  preds <- predict(model, newdata=test)
+  
+  conf.int <-predict(model, interval="confidence")
+  lmdata <- cbind(train, conf.int)
+  
+  p <- ggplot(lmdata, aes(GSM, GEX)) +
+       ggtitle(paste(geneName, "Linear Regression")) +
+       geom_point() +
+       stat_smooth(method=lm) +
+       geom_line(aes(y=lwr), color="red", linetype="dashed") +
+       geom_line(aes(y=upr), color="red", linetype="dashed")
+  print(p)
+  
+  eval_data = data.frame(expected=test$GEX, predicted=preds)
+  correlation = cor(eval_data[,1], eval_data[,2])
+  return(correlation)
+}
+
 # fit a smoothing spline to data from a single gene
 singleGeneSpline <- function(geneName, cv=FALSE, df=5) {
   data = getGeneData(geneName)
@@ -168,22 +194,53 @@ singleGeneLoess <- function(geneName, span=0.5) {
 #++++++++ ONTOLOGY MODELS ++++++++++
 #+++++++++++++++++++++++++++++++++++
 
-ontologySpline <- function(geneOntology, cv=FALSE, df=5) {
-  data = getGeneData(geneOntolo)
+# fit a linear regression to data from a single gene
+ontologyRegression <- function(geneOntology, numGO=2) {
+  data = getOntologyData(geneOntology, numGO)
   split_data = splitData(data, prop=0.8)
   train = split_data[[1]]
   test = split_data[[2]]
   
-  plot(train$GSM, train$GEX, cex=.5, main=paste(geneName, " Smoothing Spline"))
+  model <- lm(GEX~GSM, data=train)
+  preds <- predict(model, newdata=test)
+  
+  conf.int <-predict(model, interval="confidence")
+  lmdata <- cbind(train, conf.int)
+  
+  p <- ggplot(lmdata, aes(GSM, GEX)) +
+    ggtitle(paste(geneOntology, "Linear Regression")) +
+    geom_point() +
+    stat_smooth(method=lm) +
+    geom_line(aes(y=lwr), color="red", linetype="dashed") +
+    geom_line(aes(y=upr), color="red", linetype="dashed")
+  print(p)
+  
+  eval_data = data.frame(expected=test$GEX, predicted=preds)
+  correlation = cor(eval_data[,1], eval_data[,2])
+  return(correlation)
+}
+
+ontologySpline <- function(geneOntology, cv=FALSE, df=5, plot=FALSE, numGO=2) {
+  data = getOntologyData(geneOntology, numGO)
+  split_data = splitData(data, prop=0.8)
+  train = split_data[[1]]
+  test = split_data[[2]]
+  
+  if (plot==TRUE) {
+    plot(train$GSM, train$GEX, cex=.5, main=paste(geneOntology, " Smoothing Spline"))
+  }
   if (cv==TRUE) {
     fit = smooth.spline(train$GSM, train$GEX, cv=TRUE)
   }
   else {
     fit = smooth.spline(train$GSM, train$GEX, df=df)
   }
-  lines(fit, col="red", lwd=2)
+  
+  if (plot==TRUE) {
+    lines(fit, col="red", lwd=2)
+  }
   pred = predict(fit, test$GSM, se=T)
-  eval_data = data.frame(expected=test$GEX, predicted=pred[2])
+  eval_data = data.frame(predicted=pred[2], expected=test$GEX)
   correlation = cor(eval_data[,1], eval_data[,2])
   plot(eval_data)
   return(correlation)
