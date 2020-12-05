@@ -5,6 +5,11 @@ library(splines)
 library(dataPreparation)
 library(biomaRt)
 library(dplyr)
+library(ggthemes)
+library(scales)
+
+# setting color scheme
+stata_pal(scheme = "s2color")
 
 # loading in the data
 PATH_TO_DATA <- readline(prompt="Enter path to data: ")
@@ -162,7 +167,6 @@ singleGeneSpline <- function(geneName, cv=FALSE, df=5) {
   pred = predict(fit, test$GSM, se=T)
   eval_data = data.frame(expected=test$GEX, predicted=pred[2])
   correlation = cor(eval_data[,1], eval_data[,2])
-  plot(eval_data)
   return(correlation)
 }
 
@@ -247,17 +251,8 @@ ontologySpline <- function(geneOntology, cv=FALSE, df=5, plot=FALSE, numGO=2) {
 ############ ANALYSIS #################
 #######################################
 
-# Will test a number of different gene models
-# B-cell: BLK, CD79A, BANK1, BCL11B
-# Dendritic cells: PLD4, GZMB
-# Granulocytes: CCR3, MS4A3,FCGR3B,CLC
-# Monocytes: 
-# NK: KLRF1,XCL2
-# Tcells: CCR7, CD8B, CCL5
-# 
-# NEAT1: low cell type specificity so expressed in tcells, basophile, monocyte
-# LYN, SLC8A1, LY2 for myeloid
-# BCL11B, CD8A, CCR7 for lymploid
+###### SINGLE GENE ######
+# Will test a number of different linear gene models
 
 # LYMPHOID
 BCL11B <- singleGeneRegression("BCL11B")
@@ -269,7 +264,9 @@ lymphoid <- c(BCL11B, CD8A, CCR7)
 LYN <- singleGeneRegression("LYN")
 SLC8A1 <- singleGeneRegression("SLC8A1")
 PLXDC2 <- singleGeneRegression("PLXDC2")
-myeloid <- c(LYN, SLC8A1, PLXDC2)
+LRMDA <- singleGeneRegression("LRMDA")
+NAMPT <- singleGeneRegression("NAMPT")
+myeloid <- c(LYN, SLC8A1, PLXDC2, LRMDA, NAMPT)
 
 # BROAD CELL-TYPE
 broad_cell_type <- c(lymphoid, myeloid)
@@ -312,8 +309,8 @@ SERINC5 <- singleGeneRegression("SERINC5")
 non_specific <- c(NEAT1, ZEB2, IL12RB1, PLCB1, SERINC5)
 
 # plotting specific vs non-specific
-names = c("lymphoid", "myeloid", "broad cell-type", "non-specific")
-barplot(c(mean(lymphoid), mean(myeloid), mean(broad_cell_type), mean(non_specific)), names=names)
+names = c("broad cell-type", "non-specific")
+barplot(c(mean(broad_cell_type), mean(non_specific)), names=names, col='darkred', ylab="correlation", width=c(0.1,0.1), space=c(0.2,0.2))
 
 # lymphoid, myeloid, broad cell-type, and non-specific
 names = c("lymphoid", "myeloid", "broad cell-type", "non-specific")
@@ -322,3 +319,77 @@ barplot(c(mean(lymphoid), mean(myeloid), mean(broad_cell_type), mean(non_specifi
 # plotting narrow cell-types
 names_narrow = c("Dendritic", "NK", "T-Cells")
 barplot(c(mean(dendritic), mean(natural_killer), mean(t_cells)), names=names_narrow)
+
+# spline gene models
+# LYMPHOID
+BCL11B_spline <- singleGeneSpline("BCL11B")
+CD8A_spline <- singleGeneSpline("CD8A")
+CCR7_spline <- singleGeneSpline("CCR7")
+lymphoid_spline <- c(BCL11B_spline, CD8A_spline, CCR7_spline)
+
+# MYELOID
+LYN_spline <- singleGeneSpline("LYN")
+SLC8A1_spline <- singleGeneSpline("SLC8A1")
+PLXDC2_spline <- singleGeneSpline("PLXDC2")
+LRMDA_spline <- singleGeneSpline("LRMDA")
+NAMPT_spline <- singleGeneSpline("NAMPT")
+myeloid_spline <- c(LYN_spline, SLC8A1_spline, PLXDC2_spline, LRMDA_spline, NAMPT_spline)
+
+# BROAD CELL-TYPE
+broad_cell_type_spline <- c(lymphoid_spline, myeloid_spline)
+
+# B-Cell
+BANK1_spline <- singleGeneSpline("BANK1")
+BCL11B_spline <- singleGeneSpline("BCL11B")
+BLK_spline <- singleGeneSpline("BLK")
+CD79A_spline <- singleGeneSpline("CD79A")
+bcell_spline <- c(BANK1_spline, BCL11B_spline, BLK_spline, CD79A_spline)
+
+# DENDRITIC
+# PLD4_spline <- singleGeneSpline("PLD4")
+GZMB_spline <- singleGeneSpline("GZMB")
+dendritic_spline <- c(GZMB_spline)
+
+# GRANULOCYTES
+CCR3_spline <- singleGeneSpline("CCR3")
+MS4A3_spline <- singleGeneSpline("MS4A3")
+FCGR3B_spline <- singleGeneSpline("FCGR3B")
+granulocytes_spline <- c(CCR3_spline, MS4A3_spline, FCGR3B_spline)
+
+# NATURAL KILLER
+KLRF1_spline <- singleGeneSpline("KLRF1")
+XCL2_spline <- singleGeneSpline("XCL2")
+natural_killer_spline <- c(KLRF1_spline, XCL2_spline)
+
+# T-CELLS
+CCR7_spline <- singleGeneSpline("CCR7")
+CD8B_spline <- singleGeneSpline("CD8B")
+CCL5_spline <- singleGeneSpline("CCL5")
+t_cells_spline <- c(CCR7_spline, CD8B_spline, CCL5_spline)
+
+# Non-specific
+NEAT1_spline <- singleGeneSpline("NEAT1")
+ZEB2_spline <- singleGeneSpline("ZEB2")
+IL12RB1_spline <- singleGeneSpline("IL12RB1")
+PLCB1_spline <- singleGeneSpline("PLCB1")
+SERINC5_spline <- singleGeneSpline("SERINC5")
+non_specific_spline <- c(NEAT1_spline, ZEB2_spline, IL12RB1_spline, PLCB1_spline, SERINC5_spline)
+
+# plotting specific vs non-specific
+names = c("broad cell-type", "non-specific")
+barplot(c(mean(broad_cell_type_spline), mean(non_specific_spline)), names=names, col='darkred', ylab="correlation")
+
+# lymphoid, myeloid, broad cell-type, and non-specific
+names = c("lymphoid", "myeloid", "broad cell-type", "non-specific")
+barplot(c(mean(lymphoid_spline), mean(myeloid_spline), mean(broad_cell_type_spline), mean(non_specific_spline)), names=names)
+
+# plotting narrow cell-types
+names_narrow = c("Dendritic", "NK", "T-Cells")
+barplot(c(mean(dendritic_spline), mean(natural_killer_spline), mean(t_cells_spline)), names=names_narrow)
+
+# plotting broad cell vs non-specific for linear and splines
+names = c("broad cell-type", "non-specific","broad cell-type_spline", "non-specific_spline")
+barplot(c(mean(broad_cell_type), mean(non_specific), mean(broad_cell_type_spline), mean(non_specific_spline)), names=names, col='darkred', ylab="correlation")
+
+######## GENE ONTOLOGY #######
+# running some sample gene ontology models to show poor performance
