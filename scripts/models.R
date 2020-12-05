@@ -114,9 +114,6 @@ plotGeneOntology <- function(geneOntology, results, numcells=5000) {
   plot(gg)
 }
 
-# getting length data
-gene_lengths = getGeneLengths(genelist)
-
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # +++++++++++++++++ Single Gene Models +++++++++++++++++++
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -245,3 +242,83 @@ ontologySpline <- function(geneOntology, cv=FALSE, df=5, plot=FALSE, numGO=2) {
   plot(eval_data)
   return(correlation)
 }
+
+#######################################
+############ ANALYSIS #################
+#######################################
+
+# Will test a number of different gene models
+# B-cell: BLK, CD79A, BANK1, BCL11B
+# Dendritic cells: PLD4, GZMB
+# Granulocytes: CCR3, MS4A3,FCGR3B,CLC
+# Monocytes: 
+# NK: KLRF1,XCL2
+# Tcells: CCR7, CD8B, CCL5
+# 
+# NEAT1: low cell type specificity so expressed in tcells, basophile, monocyte
+# LYN, SLC8A1, LY2 for myeloid
+# BCL11B, CD8A, CCR7 for lymploid
+
+# LYMPHOID
+BCL11B <- singleGeneRegression("BCL11B")
+CD8A <- singleGeneRegression("CD8A")
+CCR7 <- singleGeneRegression("CCR7")
+lymphoid <- c(BCL11B, CD8A, CCR7)
+
+# MYELOID
+LYN <- singleGeneRegression("LYN")
+SLC8A1 <- singleGeneRegression("SLC8A1")
+PLXDC2 <- singleGeneRegression("PLXDC2")
+myeloid <- c(LYN, SLC8A1, PLXDC2)
+
+# BROAD CELL-TYPE
+broad_cell_type <- c(lymphoid, myeloid)
+
+# B-Cell
+BANK1 <- singleGeneRegression("BANK1")
+BCL11B <- singleGeneRegression("BCL11B")
+BLK <- singleGeneRegression("BLK")
+CD79A <- singleGeneRegression("CD79A")
+bcell <- c(BANK1, BCL11B, BLK, CD79A)
+
+# DENDRITIC
+PLD4 <- singleGeneRegression("PLD4")
+GZMB <- singleGeneRegression("GZMB")
+dendritic <- c(PLD4, GZMB)
+
+# GRANULOCYTES
+CCR3 <- singleGeneRegression("CCR3")
+MS4A3 <- singleGeneRegression("MS4A3")
+FCGR3B <- singleGeneRegression("FCGR3B")
+granulocytes <- c(CCR3, MS4A3, FCGR3B)
+
+# NATURAL KILLER
+KLRF1 <- singleGeneRegression("KLRF1")
+XCL2 <- singleGeneRegression("XCL2")
+natural_killer <- c(KLRF1, XCL2)
+
+# T-CELLS
+CCR7 <- singleGeneRegression("CCR7")
+CD8B <- singleGeneRegression("CD8B")
+CCL5 <- singleGeneRegression("CCL5")
+t_cells <- c(CCR7, CD8B, CCL5)
+
+# Non-specific
+NEAT1 <- singleGeneRegression("NEAT1")
+ZEB2 <- singleGeneRegression("ZEB2")
+IL12RB1 <- singleGeneRegression("IL12RB1")
+PLCB1 <- singleGeneRegression("PLCB1")
+SERINC5 <- singleGeneRegression("SERINC5")
+non_specific <- c(NEAT1, ZEB2, IL12RB1, PLCB1, SERINC5)
+
+# plotting specific vs non-specific
+names = c("lymphoid", "myeloid", "broad cell-type", "non-specific")
+barplot(c(mean(lymphoid), mean(myeloid), mean(broad_cell_type), mean(non_specific)), names=names)
+
+# lymphoid, myeloid, broad cell-type, and non-specific
+names = c("lymphoid", "myeloid", "broad cell-type", "non-specific")
+barplot(c(mean(lymphoid), mean(myeloid), mean(broad_cell_type), mean(non_specific)), names=names)
+
+# plotting narrow cell-types
+names_narrow = c("Dendritic", "NK", "T-Cells")
+barplot(c(mean(dendritic), mean(natural_killer), mean(t_cells)), names=names_narrow)
