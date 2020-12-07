@@ -352,6 +352,22 @@ for (i in 1:10) {
 }
 
 ###### SINGLE GENE MODEL COMPARISONS ######
+barplot_df <- data.frame(model=c("No model", "No model", "Linear", "Linear", "Spline", "Spline"),
+                         genes=c("Broad cell-type", "Non-specific", "Broad cell-type", "Non-specific", "Broad cell-type", "Non-specific"),
+                         corr=round(c(mean(cor_bct), mean(cor_ns), mean(reg_bct), mean(reg_ns), mean(spl_bct), mean(spl_ns)),digit=2),
+                         sd=c(sd(cor_bct), sd(cor_ns), sd(reg_bct), sd(reg_ns), sd(spl_bct), sd(spl_ns)))
+
+ggplot(data=barplot_df, aes(x=model, y=corr, fill=genes)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  # geom_errorbar(aes(ymin=corr-sd, ymax=corr+sd), width=.2, position=position_dodge(.9)) +
+  geom_text(aes(label=corr), vjust=-0.3, position=position_dodge(0.9), size=3.5) +
+  theme_classic() +
+  theme(legend.position="top", legend.title=element_blank()) +
+  scale_fill_calc() +
+  xlab(element_blank()) +
+  ylab("Pearson Correlation")
+  
+
 # plotting broad cell vs non-specific for correlation, linear, splines
 names = c("Broad", "NS", "broad linear", "NS linear","broad spline", "NS spline")
 barplot(c(mean(cor_bct), mean(cor_ns), mean(reg_bct), mean(reg_ns), mean(spl_bct), mean(spl_ns)), names=names, col='darkred', ylab="correlation")
