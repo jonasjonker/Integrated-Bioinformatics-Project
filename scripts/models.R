@@ -8,9 +8,6 @@ library(dplyr)
 library(ggthemes)
 library(scales)
 
-# setting color scheme
-stata_pal(scheme = "s2color")
-
 # loading in the data
 PATH_TO_DATA <- readline(prompt="Enter path to data: ")
 GSM_FILE <- readline(prompt="Enter file name of GSM file: ")
@@ -23,6 +20,12 @@ gex_df = read.table(GEX_FILE,sep=" ")
 #++++++++++++++++++++++++++++++++++++++++++
 #++++++++++++ UTILITY FUNCTIONS +++++++++++
 #++++++++++++++++++++++++++++++++++++++++++
+
+# calculate correlation between full matrices
+fullCorr <- function(df1, df2) {
+  correlations <- sapply(1:nrow(df1), function(i) cor(df1[i,], df2[i,]))
+  correlation <- mean(correlations)
+}
 
 # generate a data frame with gene score and expression data for a given gene
 getGeneData <- function(geneName) {
@@ -264,6 +267,9 @@ ontologySpline <- function(geneOntology, cv=FALSE, df=5, plot=FALSE, numGO=2) {
 ############ ANALYSIS #################
 #######################################
 
+# calculating full correlation
+fullCorr(gsm_df, gex_df)
+
 ###### SINGLE GENE CORRELATION ######
 # testing a number of genes for correlation
 
@@ -380,4 +386,3 @@ angiogenesis_spline = ontologySpline("angiogenesis", 2)
 
 mcd = ontologyRegression("myeloid cell differentiation", 3)
 mcd_spline = ontologySpline("cell development", 3)
- 
