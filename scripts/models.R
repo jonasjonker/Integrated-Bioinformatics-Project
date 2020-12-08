@@ -369,7 +369,7 @@ ggplot(data=barplot_df, aes(x=model, y=corr, fill=genes)) +
   geom_text(aes(label=corr), vjust=-0.3, position=position_dodge(0.9), size=3.5) +
   theme_classic() +
   theme(legend.position="top", legend.title=element_blank()) +
-  scale_fill_calc() +
+  scale_fill_manual(values=c('darkred','navyblue')) +
   xlab(element_blank()) +
   ylab("Pearson Correlation")
   
@@ -377,7 +377,6 @@ ggplot(data=barplot_df, aes(x=model, y=corr, fill=genes)) +
 # plotting broad cell vs non-specific for correlation, linear, splines
 names = c("Broad", "NS", "broad linear", "NS linear","broad spline", "NS spline")
 barplot(c(mean(cor_bct), mean(cor_ns), mean(reg_bct), mean(reg_ns), mean(spl_bct), mean(spl_ns)), names=names, col='darkred', ylab="correlation")
-
 
 ######## GENE ONTOLOGY #######
 # running some sample gene ontology models to show poor performance
